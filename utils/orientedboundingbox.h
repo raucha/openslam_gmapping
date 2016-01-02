@@ -1,31 +1,28 @@
-#ifndef  ORIENTENDBOUNDINGBOX_H
-#define  ORIENTENDBOUNDINGBOX_H
-
+#ifndef ORIENTENDBOUNDINGBOX_H
+#define ORIENTENDBOUNDINGBOX_H
 
 #include <stdio.h>
 #include <math.h>
 
 #include <utils/point.h>
 
-namespace GMapping{
+namespace GMapping {
 
-template<class NUMERIC>
+template <class NUMERIC>
 class OrientedBoundingBox {
-
  public:
-  OrientedBoundingBox(std::vector< point<NUMERIC> > p);  
+  OrientedBoundingBox(std::vector<point<NUMERIC> > p);
   double area();
 
  protected:
   Point ul;
   Point ur;
   Point ll;
-  Point lr;  
+  Point lr;
 };
 
 #include "orientedboundingbox.hxx"
 
-};// end namespace
+};  // end namespace
 
 #endif
-

@@ -2,7 +2,5 @@
 
 namespace GMapping {
 
-Configuration::~Configuration(){
-}
-
+Configuration::~Configuration() {}
 };

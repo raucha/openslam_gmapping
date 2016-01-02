@@ -2,24 +2,23 @@
  *
  * This file is part of the GMAPPING project
  *
- * GMAPPING Copyright (c) 2004 Giorgio Grisetti, 
+ * GMAPPING Copyright (c) 2004 Giorgio Grisetti,
  * Cyrill Stachniss, and Wolfram Burgard
  *
- * This software is licensed under the "Creative Commons 
- * License (Attribution-NonCommercial-ShareAlike 2.0)" 
- * and is copyrighted by Giorgio Grisetti, Cyrill Stachniss, 
+ * This software is licensed under the "Creative Commons
+ * License (Attribution-NonCommercial-ShareAlike 2.0)"
+ * and is copyrighted by Giorgio Grisetti, Cyrill Stachniss,
  * and Wolfram Burgard.
- * 
+ *
  * Further information on this license can be found at:
  * http://creativecommons.org/licenses/by-nc-sa/2.0/
- * 
+ *
  * GMAPPING is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied 
+ * but WITHOUT ANY WARRANTY; without even the implied
  * warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR
- * PURPOSE.  
+ * PURPOSE.
  *
  *****************************************************************/
-
 
 #ifndef CARMENWRAPPER_H
 #define CARMENWRAPPER_H
@@ -37,17 +36,17 @@
 #include <sensor/sensor_range/rangesensor.h>
 #include <sensor/sensor_range/rangereading.h>
 
-namespace GMapping{
+namespace GMapping {
 
 class CarmenWrapper {
-public:
+ public:
   static void initializeIPC(const char* name);
   static bool start(const char* name);
   static bool isRunning();
   static void lock();
   static void unlock();
   static int registerLocalizationMessages();
-  
+
   static int queueLength();
   static OrientedPoint getTruePos();
   static bool getReading(RangeReading& reading);
@@ -55,35 +54,34 @@ public:
   static const SensorMap& sensorMap();
   static bool sensorMapComputed();
   static bool isStopped();
-  
-// conversion function  
+
+  // conversion function
   static carmen_robot_laser_message reading2carmen(const RangeReading& reading);
   static RangeReading carmen2reading(const carmen_robot_laser_message& msg);
-  static carmen_point_t point2carmen (const OrientedPoint& p);
-  static OrientedPoint carmen2point (const carmen_point_t& p);
-  
-    
-// carmen interaction
+  static carmen_point_t point2carmen(const OrientedPoint& p);
+  static OrientedPoint carmen2point(const carmen_point_t& p);
+
+  // carmen interaction
   static void robot_frontlaser_handler(carmen_robot_laser_message* frontlaser);
   static void robot_rearlaser_handler(carmen_robot_laser_message* frontlaser);
   static void simulator_truepos_handler(carmen_simulator_truepos_message* truepos);
-  //babsi:
-  static void navigator_go_handler(MSG_INSTANCE msgRef, BYTE_ARRAY callData, void*) ;
-  static void navigator_stop_handler(MSG_INSTANCE msgRef, BYTE_ARRAY callData, void*) ;
+  // babsi:
+  static void navigator_go_handler(MSG_INSTANCE msgRef, BYTE_ARRAY callData, void*);
+  static void navigator_stop_handler(MSG_INSTANCE msgRef, BYTE_ARRAY callData, void*);
 
-  //babsi:
+  // babsi:
   static void publish_globalpos(carmen_localize_summary_p summary);
-  static void publish_particles(carmen_localize_particle_filter_p filter, 
-				carmen_localize_summary_p summary);
+  static void publish_particles(carmen_localize_particle_filter_p filter,
+                                carmen_localize_summary_p summary);
 
   static void shutdown_module(int sig);
-  
-  private:
+
+ private:
   static std::deque<RangeReading> m_rangeDeque;
   static sem_t m_dequeSem;
-  static pthread_mutex_t m_mutex, m_lock;  
+  static pthread_mutex_t m_mutex, m_lock;
   static pthread_t m_readingThread;
-  static void * m_reading_function(void*);
+  static void* m_reading_function(void*);
   static bool m_threadRunning;
   static SensorMap m_sensorMap;
   static RangeSensor* m_frontLaser, *m_rearLaser;
@@ -91,18 +89,16 @@ public:
   static bool stopped;
 };
 
-} //end namespace
-
-
+}  // end namespace
 
 #endif
 /*
 int main (int argc, char** argv) {
 
-	CarmenWrapper::init_carmen(argc, argv);
-	while (true) {
-		IPC_listenWait(100);
-	}    
-	return 1;
+        CarmenWrapper::init_carmen(argc, argv);
+        while (true) {
+                IPC_listenWait(100);
+        }
+        return 1;
 }
 */
