@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 2.8)
-project(openslam_gmapping)
+project(my_openslam_gmapping)
 
 find_package(catkin)
 
