@@ -18,7 +18,9 @@ struct PointAccumulator {
   /*after end*/
   inline void update(bool value, const Point& p = Point(0, 0));
   inline Point mean() const { return 1. / n * Point(acc.x, acc.y); }
-  inline operator double() const { return visits ? (double)n * SIGHT_INC / (double)visits : -1; }
+  inline operator double() const {  //! 訪問回数中，真だった割合，占有率として利用
+    return visits ? (double)n * SIGHT_INC / (double)visits : -1;
+  }
   inline void add(const PointAccumulator& p) {
     acc = acc + p.acc;
     n += p.n;
@@ -33,6 +35,7 @@ struct PointAccumulator {
 
 void PointAccumulator::update(bool value, const Point& p) {
   if (value) {
+    // x,yはmean()で平均値を出すのに使う
     acc.x += static_cast<float>(p.x);
     acc.y += static_cast<float>(p.y);
     n++;
@@ -42,9 +45,9 @@ void PointAccumulator::update(bool value, const Point& p) {
 }
 
 double PointAccumulator::entropy() const {
-  if (!visits) return -log(.5);
-  if (n == visits || n == 0) return 0;
-  double x = (double)n * SIGHT_INC / (double)visits;
+  if (!visits) return -log(.5);         // 一度も訪問されてない時
+  if (n == visits || n == 0) return 0;  // 真か偽どちらかのみしか観測されてない時
+  double x = (double)n * SIGHT_INC / (double)visits;  // 訪問回数中，真だった割合
   return -(x * log(x) + (1 - x) * log(1 - x));
 }
 

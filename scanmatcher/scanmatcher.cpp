@@ -7,6 +7,8 @@
 #include "gridlinetraversal.h"
 //#define GENERATE_MAPS
 
+//#include "ros/ros.h"
+
 namespace GMapping {
 
 using namespace std;
@@ -113,6 +115,7 @@ readings){
 void ScanMatcher::computeActiveArea(ScanMatcherMap& map, const OrientedPoint& p,
                                     const double* readings) {
   if (m_activeAreaComputed) return;
+  // ROS_INFO("in scanmatcher old");
   OrientedPoint lp = p;
   lp.x += cos(p.theta) * m_laserPose.x - sin(p.theta) * m_laserPose.y;
   lp.y += sin(p.theta) * m_laserPose.x + cos(p.theta) * m_laserPose.y;
@@ -162,6 +165,7 @@ void ScanMatcher::computeActiveArea(ScanMatcherMap& map, const OrientedPoint& p,
   angle = m_laserAngles + m_initialBeamsSkip;
   for (const double* r = readings + m_initialBeamsSkip; r < readings + m_laserBeams; r++, angle++)
     if (m_generateMap) {
+      // 普段はこっちが呼び出される
       double d = *r;
       if (d > m_laserMaxRange || d == 0.0 || isnan(d)) continue;
       if (d > m_usableRange) d = m_usableRange;
@@ -169,6 +173,7 @@ void ScanMatcher::computeActiveArea(ScanMatcherMap& map, const OrientedPoint& p,
       IntPoint p0 = map.world2map(lp);
       IntPoint p1 = map.world2map(phit);
 
+      // LRF設置点から観測点までの直線上のグリッド全てをアクティブ化
       // IntPoint linePoints[20000] ;
       GridLineTraversalLine line;
       line.points = m_linePoints;
@@ -184,6 +189,7 @@ void ScanMatcher::computeActiveArea(ScanMatcherMap& map, const OrientedPoint& p,
         activeArea.insert(cp);
       }
     } else {
+      // 呼び出されてない・・・？
       if (*r > m_laserMaxRange || *r > m_usableRange || *r == 0.0 || isnan(*r)) continue;
       Point phit = lp;
       phit.x += *r * cos(lp.theta + *angle);
@@ -192,6 +198,7 @@ void ScanMatcher::computeActiveArea(ScanMatcherMap& map, const OrientedPoint& p,
       assert(p1.x >= 0 && p1.y >= 0);
       IntPoint cp = map.storage().patchIndexes(p1);
       assert(cp.x >= 0 && cp.y >= 0);
+      // 観測点のリッドのみをアクティブ化
       activeArea.insert(cp);
     }
 
@@ -216,33 +223,37 @@ double ScanMatcher::registerScan(ScanMatcherMap& map, const OrientedPoint& p,
   // this operation replicates the cells that will be changed in the registration operation
   map.storage().allocActiveArea();
 
-  OrientedPoint lp = p;
+  OrientedPoint lp = p;  //! LRFの座標(LRF_Pose)
   lp.x += cos(p.theta) * m_laserPose.x - sin(p.theta) * m_laserPose.y;
   lp.y += sin(p.theta) * m_laserPose.x + cos(p.theta) * m_laserPose.y;
   lp.theta += m_laserPose.theta;
   IntPoint p0 = map.world2map(lp);
 
   const double* angle = m_laserAngles + m_initialBeamsSkip;
-  double esum = 0;
+  double esum = 0;  // マップ更新によるエントロピーの変化量
   for (const double* r = readings + m_initialBeamsSkip; r < readings + m_laserBeams; r++, angle++)
+    // if (true) {
     if (m_generateMap) {
+      // HierarchicalArray2D<PointAccumulator>::PointSet activeArea;
+      // activeArea.insert(m_generateMap);///test
       double d = *r;
       if (d > m_laserMaxRange || d == 0.0 || isnan(d)) continue;
       if (d > m_usableRange) d = m_usableRange;
-      Point phit = lp + Point(d * cos(lp.theta + *angle), d * sin(lp.theta + *angle));
-      IntPoint p1 = map.world2map(phit);
+      Point phit = lp + Point(d * cos(lp.theta + *angle),
+                              d * sin(lp.theta + *angle));  //! 観測された点，position_hit
+      IntPoint p1 = map.world2map(phit);                    //! 観測点のセル
       // IntPoint linePoints[20000] ;
       GridLineTraversalLine line;
-      line.points = m_linePoints;
+      line.points = m_linePoints;  ///@todo: これ結局値使ってない気がする
       GridLineTraversal::gridLine(p0, p1, &line);
-      for (int i = 0; i < line.num_points - 1; i++) {
-        PointAccumulator& cell = map.cell(line.points[i]);
+      for (int i = 0; i < line.num_points - 1; i++) {  // レーザー通過点のセルを更新
+        PointAccumulator& cell = map.cell(line.points[i]);  // LRF~観測点間のセルを順に取得
         double e = -cell.entropy();
-        cell.update(false, Point(0, 0));
+        cell.update(false, Point(0, 0));  // Point(0, 0)は使われない
         e += cell.entropy();
         esum += e;
       }
-      if (d < m_usableRange) {
+      if (d < m_usableRange) {  // レーザー観測点のセルを更新
         double e = -map.cell(p1).entropy();
         map.cell(p1).update(true, phit);
         e += map.cell(p1).entropy();
@@ -353,8 +364,10 @@ double ScanMatcher::optimize(OrientedPoint& pnew, const ScanMatcherMap& map,
     }
     bestScore = currentScore;
     //		cout <<"score="<< currentScore << " refinement=" << refinement;
-    //		cout <<  "pose=" << currentPose.x  << " " << currentPose.y << " " << currentPose.theta <<
-    //endl;
+    //		cout <<  "pose=" << currentPose.x  << " " << currentPose.y << " " <<
+    //currentPose.theta
+    //<<
+    // endl;
     OrientedPoint bestLocalPose = currentPose;
     OrientedPoint localPose = currentPose;
 
@@ -451,8 +464,10 @@ double ScanMatcher::optimize(OrientedPoint& _mean, ScanMatcher::CovarianceMatrix
     }
     bestScore = currentScore;
     //		cout <<"score="<< currentScore << " refinement=" << refinement;
-    //		cout <<  "pose=" << currentPose.x  << " " << currentPose.y << " " << currentPose.theta <<
-    //endl;
+    //		cout <<  "pose=" << currentPose.x  << " " << currentPose.y << " " <<
+    //currentPose.theta
+    //<<
+    // endl;
     OrientedPoint bestLocalPose = currentPose;
     OrientedPoint localPose = currentPose;
 
@@ -564,6 +579,12 @@ double ScanMatcher::optimize(OrientedPoint& _mean, ScanMatcher::CovarianceMatrix
   return bestScore;
 }
 
+/**
+ * LRFのパラメータを設定
+ * @param beams   レーザーの本数
+ * @param angles  レーザーの角度配列[rad]
+ * @param lpose   LRFの座標[m?,rad]
+ */
 void ScanMatcher::setLaserParameters(unsigned int beams, double* angles,
                                      const OrientedPoint& lpose) {
   /*if (m_laserAngles)

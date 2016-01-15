@@ -15,9 +15,9 @@ inline void GridSlamProcessor::scanMatch(const double* plainReading) {
     double score, l, s;
     score = m_matcher.optimize(corrected, it->map, it->pose, plainReading);
     //    it->pose=corrected;
-    if (score > m_minimumScore) {
+    if (score > m_minimumScore) {  //スキャンマッチ成功時
       it->pose = corrected;
-    } else {
+    } else {  //スキャンマッチ失敗時
       if (m_infoStream) {
         m_infoStream << "Scan Matching Failed, using odometry. Likelihood=" << l << std::endl;
         m_infoStream << "lp:" << m_lastPartPose.x << " " << m_lastPartPose.y << " "

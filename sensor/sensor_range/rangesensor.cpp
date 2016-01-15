@@ -4,6 +4,15 @@ namespace GMapping {
 
 RangeSensor::RangeSensor(std::string name) : Sensor(name) {}
 
+/**
+* 2次元距離センサクラスのコンストラクタ
+* @param name      レーザーの本数
+* @param beams_num レーザーの本数
+* @param res       角度分解能[rad]
+* @param position  分からん，(0,0,0)が入ってる．
+* @param span      分からん，0が入ってる
+* @param maxrange  センサの最長限界測定距離
+*/
 RangeSensor::RangeSensor(std::string name, unsigned int beams_num, double res,
                          const OrientedPoint& position, double span, double maxrange)
     : Sensor(name), m_pose(position), m_beams(beams_num) {

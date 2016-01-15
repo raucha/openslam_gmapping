@@ -295,6 +295,11 @@ void GridSlamProcessor::processTruePos(const OdometryReading& o) {
   }
 }
 
+/**
+ * 軌跡に新しいロボット座標とその時のLRFの観測値を追加
+ * @param reading 距離データ,データ数,センササイプ，時刻,LRFの座標とかが入ってる
+ * @param adaptParticles =0,使ってない
+ */
 bool GridSlamProcessor::processScan(const RangeReading& reading, int adaptParticles) {
   /**retireve the position from the reading, and compute the odometry*/
   OrientedPoint relPose = reading.getPose();
@@ -393,9 +398,9 @@ bool GridSlamProcessor::processScan(const RangeReading& reading, int adaptPartic
     RangeReading* reading_copy =
         new RangeReading(reading.size(), &(reading[0]),
                          static_cast<const RangeSensor*>(reading.getSensor()), reading.getTime());
-
+    // 2回目以降
     if (m_count > 0) {
-      scanMatch(plainReading);
+      scanMatch(plainReading);  //各パーティクルでスキャンマッチを実行
       if (m_outputStream.is_open()) {
         m_outputStream << "LASER_READING " << reading.size() << " ";
         m_outputStream << setiosflags(ios::fixed) << setprecision(2);
@@ -416,7 +421,7 @@ bool GridSlamProcessor::processScan(const RangeReading& reading, int adaptPartic
         }
         m_outputStream << endl;
       }
-      onScanmatchUpdate();
+      onScanmatchUpdate();  //何もしてない
 
       updateTreeWeights(false);
 
@@ -427,8 +432,8 @@ bool GridSlamProcessor::processScan(const RangeReading& reading, int adaptPartic
         m_outputStream << setiosflags(ios::fixed) << setprecision(6);
         m_outputStream << "NEFF " << m_neff << endl;
       }
-      resample(plainReading, adaptParticles, reading_copy);
-
+      resample(plainReading, adaptParticles, reading_copy);  // m_particlesにデータを追加．多分．
+      //初実行
     } else {
       m_infoStream << "Registering First Scan" << endl;
       for (ParticleVector::iterator it = m_particles.begin(); it != m_particles.end(); it++) {
