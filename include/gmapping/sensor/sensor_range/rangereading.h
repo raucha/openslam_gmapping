@@ -13,6 +13,10 @@ class RangeReading : public SensorReading, public std::vector<double> {
   RangeReading(unsigned int n_beams, const double* d, const RangeSensor* rs, double time = 0);
   virtual ~RangeReading();
   inline const OrientedPoint& getPose() const { return m_pose; }
+  /**
+   * 観測時のロボット位置を設定
+   * @param psoe ロボットの座標
+   */
   inline void setPose(const OrientedPoint& pose) { m_pose = pose; }
   unsigned int rawView(double* v, double density = 0.) const;
   std::vector<Point> cartesianForm(double maxRange = 1e6) const;

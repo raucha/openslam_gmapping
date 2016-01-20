@@ -9,7 +9,7 @@ RangeSensor::RangeSensor(std::string name) : Sensor(name) {}
 * @param name      レーザーの本数
 * @param beams_num レーザーの本数
 * @param res       角度分解能[rad]
-* @param position  分からん，(0,0,0)が入ってる．
+* @param position  ロボット原点から見たLRFの相対座標[m,m,rad]，(0,0,0)が入ってる．
 * @param span      分からん，0が入ってる
 * @param maxrange  センサの最長限界測定距離
 */
